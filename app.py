@@ -1,9 +1,12 @@
 import random
+import os
 import numpy as np
 import torch
 import gradio as gr
+import spaces
 from chatterbox.tts_turbo import ChatterboxTurboTTS
 
+# Check for GPU, but ZeroGPU handles the actual assignment dynamically
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 EVENT_TAGS = [
@@ -11,13 +14,10 @@ EVENT_TAGS = [
     "[sniff]", "[gasp]", "[chuckle]", "[laugh]"
 ]
 
-# --- REFINED CSS ---
-# 1. tag-container: Forces the row to wrap items instead of scrolling. Removes borders/backgrounds.
-# 2. tag-btn: Sets the specific look (indigo theme) and stops them from stretching.
 CUSTOM_CSS = """
 .tag-container {
     display: flex !important;
-    flex-wrap: wrap !important; /* This fixes the one-per-line issue */
+    flex-wrap: wrap !important;
     gap: 8px !important;
     margin-top: 5px !important;
     margin-bottom: 10px !important;
@@ -52,19 +52,18 @@ INSERT_TAG_JS = """
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-
+    
     let prefix = " ";
     let suffix = " ";
-
+    
     if (start === 0) prefix = "";
     else if (current_text[start - 1] === ' ') prefix = "";
-
+    
     if (end < current_text.length && current_text[end] === ' ') suffix = "";
 
     return current_text.slice(0, start) + prefix + tag_val + suffix + current_text.slice(end);
 }
 """
-
 
 def set_seed(seed: int):
     torch.manual_seed(seed)
@@ -74,12 +73,16 @@ def set_seed(seed: int):
     np.random.seed(seed)
 
 
+# We don't need to decorate load_model, it runs on CPU or during startup
 def load_model():
     print(f"Loading Chatterbox-Turbo on {DEVICE}...")
     model = ChatterboxTurboTTS.from_pretrained(DEVICE)
     return model
 
-
+# --- 2. THE CRITICAL DECORATOR ---
+# This tells ZeroGPU to assign a GPU to this specific function call.
+# The duration param is optional but helps with scheduling (e.g. 60s limit).
+@spaces.GPU
 def generate(
         model,
         text,
@@ -92,6 +95,7 @@ def generate(
         repetition_penalty,
         norm_loudness
 ):
+    # Reload model inside the GPU context if it was lost (ZeroGPU quirk)
     if model is None:
         model = ChatterboxTurboTTS.from_pretrained(DEVICE)
 
@@ -119,23 +123,19 @@ with gr.Blocks(title="Chatterbox Turbo", css=CUSTOM_CSS) as demo:
     with gr.Row():
         with gr.Column():
             text = gr.Textbox(
-                value="Oh, that's hilarious! [chuckle] Um anyway, we do have a new model in store. It's the SkyNet T-800 series and it's got basically everything. Including AI integration with ChatGPT and um all that jazz. Would you like me to get some prices for you?",
+                value="Congratulations Miss Connor! [chuckle] Um anyway, we do have a new model in store. It's the SkyNet T-800 series and it's got basically everything. Including AI integration with ChatGPT and all that jazz. Would you like me to get some prices for you?",
                 label="Text to synthesize (max chars 300)",
                 max_lines=5,
-                elem_id="main_textbox"
+                elem_id="main_textbox" 
             )
 
-            # --- Event Tags ---
-            # Switched back to Row, but applied specific CSS to force wrapping
             with gr.Row(elem_classes=["tag-container"]):
                 for tag in EVENT_TAGS:
-                    # elem_classes targets the button specifically
                     btn = gr.Button(tag, elem_classes=["tag-btn"])
-
                     btn.click(
-                        fn=None,
-                        inputs=[btn, text],
-                        outputs=text,
+                        fn=None, 
+                        inputs=[btn, text], 
+                        outputs=text, 
                         js=INSERT_TAG_JS
                     )
 
@@ -179,8 +179,4 @@ with gr.Blocks(title="Chatterbox Turbo", css=CUSTOM_CSS) as demo:
         outputs=audio_output,
     )
 
-if __name__ == "__main__":
-    demo.queue(
-        max_size=50,
-        default_concurrency_limit=1,
-    ).launch(share=True)
+demo.launch(mcp_server=True)
