@@ -1,8 +1,8 @@
 ---
 title: Chatterbox Turbo Demo
-emoji: 👀
-colorFrom: yellow
-colorTo: blue
+emoji: ⚡
+colorFrom: blue
+colorTo: purple
 sdk: gradio
 sdk_version: 6.0.2
 app_file: app.py
