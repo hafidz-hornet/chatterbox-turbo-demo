@@ -115,7 +115,7 @@ def generate(
     return (model.sr, wav.squeeze(0).numpy())
 
 
-with gr.Blocks(title="Chatterbox Turbo", css=CUSTOM_CSS) as demo:
+with gr.Blocks(title="Chatterbox Turbo") as demo:
     gr.Markdown("# ⚡ Chatterbox Turbo")
 
     model_state = gr.State(None)
@@ -179,4 +179,4 @@ with gr.Blocks(title="Chatterbox Turbo", css=CUSTOM_CSS) as demo:
         outputs=audio_output,
     )
 
-demo.launch(mcp_server=True)
+demo.launch(mcp_server=True, css=CUSTOM_CSS)
