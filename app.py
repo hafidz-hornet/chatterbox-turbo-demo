@@ -7,7 +7,7 @@ import spaces
 from chatterbox.tts_turbo import ChatterboxTurboTTS
 
 # Check for GPU, but ZeroGPU handles the actual assignment dynamically
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+DEVICE = "cpu"
 
 EVENT_TAGS = [
     "[clear throat]", "[sigh]", "[shush]", "[cough]", "[groan]",
@@ -97,8 +97,10 @@ def generate(
 ):
     # Reload model inside the GPU context if it was lost (ZeroGPU quirk)
     if model is None:
-        model = ChatterboxTurboTTS.from_pretrained(DEVICE)
+        model = ChatterboxTurboTTS.from_pretrained("cpu")
 
+    model.to("cuda")
+    
     if seed_num != 0:
         set_seed(int(seed_num))
 
