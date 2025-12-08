@@ -245,6 +245,15 @@ class ChatterboxTurboTTS:
         ).to(device=self.device)
         self.conds = Conditionals(t3_cond, s3gen_ref_dict)
 
+    def to(self, device):
+        self.device = device
+        self.t3 = self.t3.to(device)
+        self.s3gen = self.s3gen.to(device)
+        self.ve = self.ve.to(device)
+        if self.conds is not None:
+            self.conds = self.conds.to(device)
+        return self
+    
     def generate(
         self,
         text,
