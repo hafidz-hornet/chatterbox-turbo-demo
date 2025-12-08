@@ -182,6 +182,15 @@ class ChatterboxTurboTTS:
 
         return cls(t3, s3gen, ve, tokenizer, device, conds=conds)
 
+    def to(self, device):
+        self.device = device
+        self.t3 = self.t3.to(device)
+        self.s3gen = self.s3gen.to(device)
+        self.ve = self.ve.to(device)
+        if self.conds is not None:
+            self.conds = self.conds.to(device)
+        return self
+    
     @classmethod
     def from_pretrained(cls, device) -> 'ChatterboxTurboTTS':
         # Check if MPS is available on macOS
