@@ -6,8 +6,11 @@ import gradio as gr
 import spaces
 from chatterbox.tts_turbo import ChatterboxTurboTTS
 
-# Check for GPU, but ZeroGPU handles the actual assignment dynamically
-DEVICE = "cpu"
+# --- 1. FORCE CPU FOR GLOBAL LOADING ---
+# ZeroGPU forbids CUDA during startup. We only move to CUDA inside the decorated function.
+DEVICE = "cpu" 
+
+MODEL = None
 
 EVENT_TAGS = [
     "[clear throat]", "[sigh]", "[shush]", "[cough]", "[groan]",
@@ -73,18 +76,14 @@ def set_seed(seed: int):
     np.random.seed(seed)
 
 
-# We don't need to decorate load_model, it runs on CPU or during startup
 def load_model():
+    global MODEL
     print(f"Loading Chatterbox-Turbo on {DEVICE}...")
-    model = ChatterboxTurboTTS.from_pretrained(DEVICE)
-    return model
+    MODEL = ChatterboxTurboTTS.from_pretrained(DEVICE)
+    return MODEL
 
-# --- 2. THE CRITICAL DECORATOR ---
-# This tells ZeroGPU to assign a GPU to this specific function call.
-# The duration param is optional but helps with scheduling (e.g. 60s limit).
 @spaces.GPU
 def generate(
-        model,
         text,
         audio_prompt_path,
         temperature,
@@ -95,16 +94,18 @@ def generate(
         repetition_penalty,
         norm_loudness
 ):
-    # Reload model inside the GPU context if it was lost (ZeroGPU quirk)
-    if model is None:
-        model = ChatterboxTurboTTS.from_pretrained("cpu")
+    global MODEL
+    # Reload if the worker lost the global state
+    if MODEL is None:
+        MODEL = ChatterboxTurboTTS.from_pretrained("cpu")
 
-    model.to("cuda")
-    
+    # --- MOVE TO GPU HERE ---
+    MODEL.to("cuda")
+
     if seed_num != 0:
         set_seed(int(seed_num))
 
-    wav = model.generate(
+    wav = MODEL.generate(
         text,
         audio_prompt_path=audio_prompt_path,
         temperature=temperature,
@@ -114,18 +115,17 @@ def generate(
         repetition_penalty=repetition_penalty,
         norm_loudness=norm_loudness,
     )
-    return (model.sr, wav.squeeze(0).numpy())
+    
+    return (MODEL.sr, wav.squeeze(0).cpu().numpy())
 
 
 with gr.Blocks(title="Chatterbox Turbo") as demo:
     gr.Markdown("# ⚡ Chatterbox Turbo")
 
-    model_state = gr.State(None)
-
     with gr.Row():
         with gr.Column():
             text = gr.Textbox(
-                value="Oh, that's hilarious! [chuckle] Um anyway, we do have a new model in store. It's the SkyNet T-800 series and it's got basically everything. Including AI integration with ChatGPT and all that jazz. Would you like me to get some prices for you?",
+                value="Congratulations Miss Connor! [chuckle] Um anyway, we do have a new model in store. It's the SkyNet T-800 series and it's got basically everything. Including AI integration with ChatGPT and all that jazz. Would you like me to get some prices for you?",
                 label="Text to synthesize (max chars 300)",
                 max_lines=5,
                 elem_id="main_textbox" 
@@ -162,13 +162,12 @@ with gr.Blocks(title="Chatterbox Turbo") as demo:
                 min_p = gr.Slider(0.00, 1.00, step=0.01, label="Min P (Set to 0 to disable)", value=0.00)
                 norm_loudness = gr.Checkbox(value=True, label="Normalize Loudness (Match prompt volume)")
 
-    
-    demo.load(fn=load_model, inputs=[], outputs=model_state)
+    # Load on startup (CPU)
+    demo.load(fn=load_model, inputs=[], outputs=[])
 
     run_btn.click(
         fn=generate,
         inputs=[
-            model_state,
             text,
             ref_wav,
             temp,
@@ -182,4 +181,9 @@ with gr.Blocks(title="Chatterbox Turbo") as demo:
         outputs=audio_output,
     )
 
-demo.launch(mcp_server=True, css=CUSTOM_CSS)
+if __name__ == "__main__":
+    demo.queue().launch(
+        mcp_server=True,
+        css=CUSTOM_CSS,
+        ssr_mode=False
+    )
