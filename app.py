@@ -48,17 +48,17 @@ CUSTOM_CSS = """
 INSERT_TAG_JS = """
 (tag_val, current_text) => {
     const textarea = document.querySelector('#main_textbox textarea');
-    if (!textarea) return current_text + " " + tag_val; 
+    if (!textarea) return current_text + " " + tag_val;
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    
+
     let prefix = " ";
     let suffix = " ";
-    
+
     if (start === 0) prefix = "";
     else if (current_text[start - 1] === ' ') prefix = "";
-    
+
     if (end < current_text.length && current_text[end] === ' ') suffix = "";
 
     return current_text.slice(0, start) + prefix + tag_val + suffix + current_text.slice(end);
@@ -97,7 +97,7 @@ def generate(
         repetition_penalty=repetition_penalty,
         norm_loudness=norm_loudness,
     )
-    
+
     return (MODEL.sr, wav.squeeze(0).cpu().numpy())
 
 
@@ -110,16 +110,16 @@ with gr.Blocks(title="Chatterbox Turbo") as demo:
                 value="Oh, that's hilarious! [chuckle] Um anyway, we do have a new model in store. It's the SkyNet T-800 series and it's got basically everything. Including AI integration with ChatGPT and all that jazz. Would you like me to get some prices for you?",
                 label="Text to synthesize (max chars 300)",
                 max_lines=5,
-                elem_id="main_textbox" 
+                elem_id="main_textbox"
             )
 
             with gr.Row(elem_classes=["tag-container"]):
                 for tag in EVENT_TAGS:
                     btn = gr.Button(tag, elem_classes=["tag-btn"])
                     btn.click(
-                        fn=None, 
-                        inputs=[btn, text], 
-                        outputs=text, 
+                        fn=None,
+                        inputs=[btn, text],
+                        outputs=text,
                         js=INSERT_TAG_JS
                     )
 
@@ -127,7 +127,7 @@ with gr.Blocks(title="Chatterbox Turbo") as demo:
                 sources=["upload", "microphone"],
                 type="filepath",
                 label="Reference Audio File",
-                value=None,
+                value="https://storage.googleapis.com/chatterbox-demo-samples/prompts/Ethan.wav",
             )
 
             run_btn = gr.Button("Generate ⚡", variant="primary")
