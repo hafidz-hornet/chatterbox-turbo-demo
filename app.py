@@ -145,7 +145,7 @@ with gr.Blocks(title="Chatterbox Turbo") as demo:
                 sources=["upload", "microphone"],
                 type="filepath",
                 label="Reference Audio File",
-                value="https://storage.googleapis.com/chatterbox-demo-samples/prompts/female_random_podcast.wav"
+                value=None,
             )
 
             run_btn = gr.Button("Generate ⚡", variant="primary")
