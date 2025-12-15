@@ -6,8 +6,8 @@ import gradio as gr
 import spaces
 from chatterbox.tts_turbo import ChatterboxTurboTTS
 
-MODEL = None
-FIRST_RUN = True
+
+MODEL = ChatterboxTurboTTS.from_pretrained("cuda" )
 
 EVENT_TAGS = [
     "[clear throat]", "[sigh]", "[shush]", "[cough]", "[groan]",
@@ -72,12 +72,6 @@ def set_seed(seed: int):
     random.seed(seed)
     np.random.seed(seed)
 
-
-def load_model():
-    global MODEL
-    MODEL = ChatterboxTurboTTS.from_pretrained("cpu")
-    return MODEL
-
 @spaces.GPU
 def generate(
         text,
@@ -90,15 +84,6 @@ def generate(
         repetition_penalty,
         norm_loudness
 ):
-    global MODEL, FIRST_RUN
-    # Reload if the worker lost the global state
-    if MODEL is None:
-        MODEL = load_model()
-        MODEL.to("cuda")
-    if FIRST_RUN:
-        FIRST_RUN = False
-        MODEL.to("cuda")
-
     if seed_num != 0:
         set_seed(int(seed_num))
 
@@ -158,9 +143,6 @@ with gr.Blocks(title="Chatterbox Turbo") as demo:
                 repetition_penalty = gr.Slider(1.00, 2.00, step=0.05, label="Repetition Penalty", value=1.2)
                 min_p = gr.Slider(0.00, 1.00, step=0.01, label="Min P (Set to 0 to disable)", value=0.00)
                 norm_loudness = gr.Checkbox(value=True, label="Normalize Loudness (-27 LUFS)")
-
-    # Load on startup (CPU)
-    demo.load(fn=load_model, inputs=[], outputs=[])
 
     run_btn.click(
         fn=generate,
