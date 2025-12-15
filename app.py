@@ -6,11 +6,8 @@ import gradio as gr
 import spaces
 from chatterbox.tts_turbo import ChatterboxTurboTTS
 
-# --- 1. FORCE CPU FOR GLOBAL LOADING ---
-# ZeroGPU forbids CUDA during startup. We only move to CUDA inside the decorated function.
-DEVICE = "cpu" 
-
 MODEL = None
+FIRST_RUN = True
 
 EVENT_TAGS = [
     "[clear throat]", "[sigh]", "[shush]", "[cough]", "[groan]",
@@ -78,8 +75,7 @@ def set_seed(seed: int):
 
 def load_model():
     global MODEL
-    print(f"Loading Chatterbox-Turbo on {DEVICE}...")
-    MODEL = ChatterboxTurboTTS.from_pretrained(DEVICE)
+    MODEL = ChatterboxTurboTTS.from_pretrained("cpu")
     return MODEL
 
 @spaces.GPU
@@ -94,13 +90,14 @@ def generate(
         repetition_penalty,
         norm_loudness
 ):
-    global MODEL
+    global MODEL, FIRST_RUN
     # Reload if the worker lost the global state
     if MODEL is None:
-        MODEL = ChatterboxTurboTTS.from_pretrained("cpu")
-
-    # --- MOVE TO GPU HERE ---
-    MODEL.to("cuda")
+        MODEL = load_model()
+        MODEL.to("cuda")
+    if FIRST_RUN:
+        FIRST_RUN = False
+        MODEL.to("cuda")
 
     if seed_num != 0:
         set_seed(int(seed_num))
