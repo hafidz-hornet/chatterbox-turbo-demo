@@ -1,0 +1,95 @@
+# Virtual Environments
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Models and Checkpoints
+models/
+checkpoints/
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+*.bin
+*.model
+
+# Hugging Face Cache
+.cache/
+huggingface/
+hf_cache/
+
+# Audio Files (generated outputs)
+outputs/
+generated/
+*.wav
+*.mp3
+*.flac
+# Exclude example audio if you want to keep reference samples
+# !examples/*.wav
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.tox/
+.coverage
+htmlcov/
+*.cover
+.hypothesis/
+
+# Logs
+*.log
+logs/
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Gradio
+gradio_cached_examples/
+flagged/
