@@ -1,5 +1,6 @@
-numpy>=1.24.0,<1.26.0
+numpy>=1.24.0
 librosa==0.11.0
+spaces
 s3tokenizer
 torch==2.6.0
 torchaudio==2.6.0
