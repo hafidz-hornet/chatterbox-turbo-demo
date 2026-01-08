@@ -51,19 +51,38 @@ A high-quality Text-to-Speech (TTS) demo powered by **Chatterbox Turbo** from Re
 
 2. **Create virtual environment**
    ```bash
-   python -m venv env
+   python -m venv .venv
    
    # Windows
-   .\env\Scripts\Activate.ps1
+   .\.venv\Scripts\Activate.ps1
    
    # Linux/Mac
-   source env/bin/activate
+   source .venv/bin/activate
    ```
 
 3. **Install dependencies**
    ```bash
    pip install -r requirements.txt
    ```
+   
+   **Note on PyTorch Installation**: PyTorch must be installed separately with the appropriate CUDA version for your GPU:
+   
+   - **For NVIDIA RTX 50-series (Blackwell - sm_120)** (RTX 5060 Ti, RTX 5070, etc.):
+     ```bash
+     pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu128
+     ```
+     PyTorch 2.7+ with CUDA 12.8 is required for Blackwell architecture support.
+   
+   - **For other NVIDIA GPUs (older architectures)**:
+     ```bash
+     pip install torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+     ```
+   
+   - **For CPU only** (no GPU acceleration):
+     ```bash
+     pip install torch torchaudio
+     ```
+     Then set `DEVICE=cpu` in your `.env` file.
 
 4. **Configure environment variables**
    

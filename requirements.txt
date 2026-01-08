@@ -2,8 +2,13 @@ numpy>=1.24.0
 librosa==0.11.0
 spaces
 s3tokenizer
-torch==2.6.0
-torchaudio==2.6.0
+# For CUDA GPU support, install torch and torchaudio separately:
+# pip install torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+# For NVIDIA RTX 50-series (Blackwell - sm_120), use PyTorch 2.7+ with CUDA 12.8:
+# pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu128
+# For CPU only, uncomment below:
+# torch==2.6.0
+# torchaudio==2.6.0
 transformers==4.46.3
 diffusers==0.29.0
 resemble-perth==1.0.1
@@ -13,4 +18,5 @@ spacy-pkuseg
 pykakasi==2.3.0
 gradio==5.44.1
 pyloudnorm
+python-dotenv==1.0.1
 omegaconf

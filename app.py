@@ -4,8 +4,11 @@ import numpy as np
 import torch
 import gradio as gr
 import spaces
+from dotenv import load_dotenv
 from chatterbox.tts_turbo import ChatterboxTurboTTS
 
+# Load environment variables from .env file
+load_dotenv()
 
 MODEL = ChatterboxTurboTTS.from_pretrained("cuda" )
 
@@ -101,15 +104,15 @@ def generate(
     return (MODEL.sr, wav.squeeze(0).cpu().numpy())
 
 
-with gr.Blocks(title="Chatterbox Turbo") as demo:
+with gr.Blocks(title="Chatterbox Turbo", css=CUSTOM_CSS) as demo:
     gr.Markdown("# ⚡ Chatterbox Turbo")
 
     with gr.Row():
         with gr.Column():
             text = gr.Textbox(
                 value="Oh, that's hilarious! [chuckle] Um anyway, we do have a new model in store. It's the SkyNet T-800 series and it's got basically everything. Including AI integration with ChatGPT and all that jazz. Would you like me to get some prices for you?",
-                label="Text to synthesize (max chars 300)",
-                max_lines=5,
+                label="Text to synthesize",
+                max_lines=10,
                 elem_id="main_textbox"
             )
 
@@ -163,6 +166,5 @@ with gr.Blocks(title="Chatterbox Turbo") as demo:
 if __name__ == "__main__":
     demo.queue().launch(
         mcp_server=True,
-        css=CUSTOM_CSS,
         ssr_mode=False
     )
